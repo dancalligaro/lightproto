@@ -29,6 +29,12 @@
   video.showVideo{
     display: block;
   }
+  canvas {
+    -webkit-transform: scale(10,10);
+    position: relative;
+    top: 200px;
+    left: 200px;
+  }
   </style>
 
 </head>
@@ -55,19 +61,36 @@
     <div class="indicator indicatorOff">OFF</div>
   </div>
 
-  <hr/>
+  <div id="slopeLevels">
+  
+    <div>
+      Slope On: <input type="text" id="slopeOn">
+    </div>
 
-  <div>
-    Luminance: <span id="currentluminance">0</span>
+    <div>
+      Slope Off: <input type="text" id="slopeOff">
+    </div>
+
+    <div id="indicatorsSlope">
+      <div class="indicator indicatorOn">ON</div>
+      <div class="indicator indicatorOff">OFF</div>
+    </div>
+
   </div>
 
-  <div id="indicatorsLuminance">
-    <div class="indicator indicatorOn">ON</div>
-    <div class="indicator indicatorOff">OFF</div>
+  <hr />
+
+  <div id="darkPixels">
+    <div>Dark Pixels</div>
+    <div id="indicatorsPixels">
+      <div class="indicator indicatorOn">ON</div>
+      <div class="indicator indicatorOff">OFF</div>
+    </div>
+
   </div>
 
-<video autoplay ></video>
-<canvas style="display: none;" width="640" height="480"></canvas>
+<video width="320" height="240" autoplay ></video>
+<canvas width="40" height="40"></canvas>
 
 <script>
   var video = document.querySelector('video');
@@ -75,27 +98,22 @@
   var ctx = canvas.getContext('2d');
   var localMediaStream = null;
 
-  var valuesToSample = 3;
-  var values = [];
-
-
-  var SAMPLE_SIZE = 10;
+  var SAMPLE_SIZE = 40;
 
   var thresholdEl = document.getElementById('threshold');
   var threshold = parseFloat(thresholdEl.value,10);
 
   var indicators = document.getElementById('indicators');
-  var indicatorsLuminance = document.getElementById('indicatorsLuminance');
   var currentvalue = document.getElementById('currentvalue');
   var chkShowVideo = document.getElementById('chkShowVideo');
   var thresRange = document.getElementById('thresRange');
-  var currentluminance = document.getElementById('currentluminance');
 
-var slopeThresh = 10;
+  var indicatorsSlope = document.getElementById('indicatorsSlope');
+
+  var slopeOnValueEl = document.getElementById('slopeOnValue');
 
   thresRange.value = threshold * 100;
-  var luminanceThres = 40;
-
+  
   chkShowVideo.onclick = function(){
       video.className = this.checked ? "showVideo" : "";
   }
@@ -110,43 +128,65 @@ var slopeThresh = 10;
     thresRange.value = threshold * 100;
   }
 
+  //Slope detection
+  var slopeThreshOn = 0.001;
+  var slopeThreshOff = -0.001;
+
+  document.getElementById('slopeOn').onkeyup = function(){
+    slopeThreshOn = parseFloat(this.value,10);
+  }
+
+  document.getElementById('slopeOff').onkeyup = function(){
+   slopeThreshOff = parseFloat(this.value,10); 
+  }
+
+  document.getElementById('slopeOn').value = slopeThreshOn;
+  document.getElementById('slopeOff').value = slopeThreshOff;
+  var indicatorsPixels =document.getElementById('indicatorsPixels');
+
   var lastValue = null;
   var minSlope = 0, maxSlope = 0;
+  var lastEventFiredTime = 0;
+  var slopeDebounce = 800;//Milliseconds to avoid triggering events during the camera's brightness adjustment
 
   function snapshot() {
-    var pixelData;
+    var pixels;
     var i,j;
     var level = 0, Y = 0;
+    var frameMax, frameMin;
+    var y, yMin=1000, yMax=0;
+    var countWhite = 0 , countBlack=0;
 
     if (localMediaStream) {
       ctx.drawImage(video, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+      
+      pixels = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE).data;
 
-      for(i=0;i<SAMPLE_SIZE;i++){
-        for(j=0;j<SAMPLE_SIZE;j++){
-          pixelData = ctx.getImageData(i, j, 1, 1).data;
-          level+=Math.max(pixelData[0], pixelData[1], pixelData[2])
-          Y = 0.2126 * pixelData[0] + 0.7152 * pixelData[1] + 0.0722 * pixelData[2];
+      for(i=0;i< (SAMPLE_SIZE * SAMPLE_SIZE) * 4;i+=4){
+          level += pixels[i+0] + pixels[i+1] + pixels[i+2];
+          y = pixels[i+3] = 0.2126 * pixels[i+0] + 0.7152 * pixels[i+1] + 0.0722 * pixels[i+2];
+          yMin = yMin < y ? yMin : y;
+          yMax = yMax > y ? yMax : y;
+          Y+= y;
+      }
+
+      var bortThreshold = 0.3 * (yMax - yMin) + yMin;
+
+      for(i=0;i< (SAMPLE_SIZE * SAMPLE_SIZE) *4 ;i+=4){
+        if(pixels[i+3] > bortThreshold){
+          countWhite ++;
+        }else{
+          countBlack ++;
         }
       }
 
-      level = level/256/SAMPLE_SIZE/SAMPLE_SIZE;
+      indicatorsPixels.className = countWhite > countBlack ? "on" : "off";
+
+      level = level/256/3/SAMPLE_SIZE/SAMPLE_SIZE;
 
       currentvalue.innerHTML = Math.round(level*1000)/1000;
-      currentluminance.innerHTML = Math.round(Y*1000)/1000;
 
       indicators.className = level>threshold ? "on" : "off";
-      indicatorsLuminance.className = Y>luminanceThres ? "on" : "off";
-
-      if(values.length==valuesToSample){
-        lastAverage = values.reduce(function(sum, item){ return sum + item; },0) / values.length;
-        //console.log('la', lastAverage)
-      }
-
-      values.push(level);
-
-      if(values.length > valuesToSample){
-        values.shift();
-      }
 
       var thisValue = {
           time: +new Date(),
@@ -159,15 +199,17 @@ var slopeThresh = 10;
           slope = deltaLevel/deltaTime;
           minSlope = Math.min(minSlope, slope);
           maxSlope = Math.max(maxSlope, slope);
-          console.log(slope, minSlope, maxSlope);
 
-
-
-        if(slope > slopeThresh){
-          console.log('turn on');
-        }else if (slope < -slopeThresh){
-          console.log('turn off');
+        if(lastEventFiredTime + slopeDebounce < +new Date()){
+          if(slope > slopeThreshOn){
+            lastEventFiredTime = +new Date();
+            indicatorsSlope.className = "on";
+          }else if (slope < slopeThreshOff){
+            lastEventFiredTime = +new Date();
+            indicatorsSlope.className = "off";
+          }
         }
+
       }
 
       lastValue = thisValue;
@@ -184,7 +226,6 @@ var slopeThresh = 10;
   webkitRequestAnimationFrame(snapshot);
 
   //video.addEventListener('click', snapshot, false);
-
 
 
   try{
