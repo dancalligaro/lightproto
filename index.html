@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+<head>
+  <title>onoff</title>
+
+  <style>
+  body{
+    font-family: "Arial", sans-serif;
+  }
+  .indicator {
+    display: none;
+    font-size: 25px;
+    text-align: center;
+    border: solid 3px black;
+    padding: 10px 0;
+    width: 150px;
+  }
+  .on .indicatorOn{
+    display: block;
+    background: red;
+  }
+  .off .indicatorOff{
+    display: block;
+    background: green;
+  }
+  video{
+    display: none;
+  }
+  video.showVideo{
+    display: block;
+  }
+  </style>
+
+</head>
+<body>
+
+  <div>
+    <input type="checkbox" id="chkShowVideo" />
+    <label for="chkShowVideo">Show Video</label>
+  </div>
+
+  <hr />
+
+  <div>
+    Level: <span id="currentvalue">0</span>
+  </div>
+
+  <div>
+    Threshold: <input type="text" id="threshold" value="0.4" />
+    <input type="range" id="thresRange" name="thresRange" min="0" max="100">
+  </div>
+
+  <div id="indicators">
+    <div class="indicator indicatorOn">ON</div>
+    <div class="indicator indicatorOff">OFF</div>
+  </div>
+
+  <hr/>
+
+  <div>
+    Luminance: <span id="currentluminance">0</span>
+  </div>
+
+  <div id="indicatorsLuminance">
+    <div class="indicator indicatorOn">ON</div>
+    <div class="indicator indicatorOff">OFF</div>
+  </div>
+
+<video autoplay ></video>
+<canvas style="display: none;" width="640" height="480"></canvas>
+
+<script>
+  var video = document.querySelector('video');
+  var canvas = document.querySelector('canvas');
+  var ctx = canvas.getContext('2d');
+  var localMediaStream = null;
+
+  var valuesToSample = 3;
+  var values = [];
+
+
+  var SAMPLE_SIZE = 10;
+
+  var thresholdEl = document.getElementById('threshold');
+  var threshold = parseFloat(thresholdEl.value,10);
+
+  var indicators = document.getElementById('indicators');
+  var indicatorsLuminance = document.getElementById('indicatorsLuminance');
+  var currentvalue = document.getElementById('currentvalue');
+  var chkShowVideo = document.getElementById('chkShowVideo');
+  var thresRange = document.getElementById('thresRange');
+  var currentluminance = document.getElementById('currentluminance');
+
+var slopeThresh = 10;
+
+  thresRange.value = threshold * 100;
+  var luminanceThres = 40;
+
+  chkShowVideo.onclick = function(){
+      video.className = this.checked ? "showVideo" : "";
+  }
+
+  thresRange.onchange = function(){
+    threshold = this.value/100;
+    thresholdEl.value = threshold;
+  }
+
+  function thresholdChange(){
+    threshold = parseInt(thresholdEl.value,10);
+    thresRange.value = threshold * 100;
+  }
+
+  var lastValue = null;
+  var minSlope = 0, maxSlope = 0;
+
+  function snapshot() {
+    var pixelData;
+    var i,j;
+    var level = 0, Y = 0;
+
+    if (localMediaStream) {
+      ctx.drawImage(video, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+
+      for(i=0;i<SAMPLE_SIZE;i++){
+        for(j=0;j<SAMPLE_SIZE;j++){
+          pixelData = ctx.getImageData(i, j, 1, 1).data;
+          level+=Math.max(pixelData[0], pixelData[1], pixelData[2])
+          Y = 0.2126 * pixelData[0] + 0.7152 * pixelData[1] + 0.0722 * pixelData[2];
+        }
+      }
+
+      level = level/256/SAMPLE_SIZE/SAMPLE_SIZE;
+
+      currentvalue.innerHTML = Math.round(level*1000)/1000;
+      currentluminance.innerHTML = Math.round(Y*1000)/1000;
+
+      indicators.className = level>threshold ? "on" : "off";
+      indicatorsLuminance.className = Y>luminanceThres ? "on" : "off";
+
+      if(values.length==valuesToSample){
+        lastAverage = values.reduce(function(sum, item){ return sum + item; },0) / values.length;
+        //console.log('la', lastAverage)
+      }
+
+      values.push(level);
+
+      if(values.length > valuesToSample){
+        values.shift();
+      }
+
+      var thisValue = {
+          time: +new Date(),
+          level: level
+      };        
+
+      if(lastValue !== null){
+        var deltaLevel = lastValue.level - thisValue.level, 
+          deltaTime = lastValue.time - thisValue.time,
+          slope = deltaLevel/deltaTime;
+          minSlope = Math.min(minSlope, slope);
+          maxSlope = Math.max(maxSlope, slope);
+          console.log(slope, minSlope, maxSlope);
+
+        if(slope > slopeThresh){
+          console.log('turn on');
+        }else if (slope < -slopeThresh){
+          console.log('turn off');
+        }
+      }
+
+      lastValue = thisValue;
+      
+    }
+    webkitRequestAnimationFrame(snapshot);
+  }
+
+
+  function errorCallback(e) {
+    console.log('Reeeejected!', e);
+  };
+
+  webkitRequestAnimationFrame(snapshot);
+
+  //video.addEventListener('click', snapshot, false);
+
+
+
+  try{
+
+  }catch(ex){
+    console.log('errrrr')
+  }
+
+  // Not showing vendor prefixes or code that works cross-browser.
+  navigator.webkitGetUserMedia({video: true}, function(stream) {
+    video.src = window.URL.createObjectURL(stream);
+    localMediaStream = stream;
+  }, errorCallback);
+
+
+
+</script>
+</body>
+</html>
