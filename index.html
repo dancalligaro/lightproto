@@ -29,7 +29,7 @@
   video.showVideo{
     display: block;
   }
-  canvas {
+  #processingCanvas {
     -webkit-transform: scale(10,10);
     position: relative;
     top: 200px;
@@ -89,12 +89,17 @@
 
   </div>
 
-<video width="320" height="240" autoplay ></video>
-<canvas width="40" height="40"></canvas>
+<video id='videoEl' width="320" height="240" autoplay ></video>
+<canvas id="processingCanvas" width="40" height="40"></canvas>
+
+<canvas id="histogramCanvas" width="100" height="100" style="boder: solid 1px red;" ></canvas>
 
 <script>
+
+  window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
+
   var video = document.querySelector('video');
-  var canvas = document.querySelector('canvas');
+  var canvas = document.getElementById('processingCanvas');
   var ctx = canvas.getContext('2d');
   var localMediaStream = null;
 
@@ -215,7 +220,7 @@
       lastValue = thisValue;
       
     }
-    webkitRequestAnimationFrame(snapshot);
+    requestAnimationFrame(snapshot);
   }
 
 
@@ -223,20 +228,26 @@
     console.log('Reeeejected!', e);
   };
 
-  webkitRequestAnimationFrame(snapshot);
 
-  //video.addEventListener('click', snapshot, false);
-
-
-  try{
-
-  }catch(ex){
-    console.log('errrrr')
-  }
+  navigator.getMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
 
   // Not showing vendor prefixes or code that works cross-browser.
-  navigator.webkitGetUserMedia({video: true}, function(stream) {
-    video.src = window.URL.createObjectURL(stream);
+  navigator.getMedia({video: true}, function(stream) {
+    if (video.mozSrcObject !== undefined) {
+      
+        video.mozSrcObject = stream;
+        video.play()
+        setTimeout(function(){
+          requestAnimationFrame(snapshot);  
+        },2000)
+    } else {
+        //video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
+      video.src = window.URL.createObjectURL(stream);
+      requestAnimationFrame(snapshot);  
+    };
     localMediaStream = stream;
   }, errorCallback);
 
