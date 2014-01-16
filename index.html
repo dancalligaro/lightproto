@@ -90,6 +90,17 @@
 
   </div>
 
+  <hr />
+
+  <div id="topBottom">
+    <div>Top vs Bottom light</div>
+    <div id="indicatorsTopBottom">
+      <div class="indicator indicatorOn">ON</div>
+      <div class="indicator indicatorOff">OFF</div>
+    </div>
+
+  </div>
+
 <video id='videoEl' width="320" height="240" autoplay ></video>
 <canvas id="processingCanvas" width="40" height="40"></canvas>
 
@@ -149,12 +160,14 @@
   document.getElementById('slopeOn').value = slopeThreshOn;
   document.getElementById('slopeOff').value = slopeThreshOff;
   var indicatorsPixels =document.getElementById('indicatorsPixels');
+  var indicatorsTopBottom = document.getElementById('indicatorsTopBottom');
 
   var lastValue = null;
   var minSlope = 0, maxSlope = 0;
   var lastEventFiredTime = 0;
   var slopeDebounce = 800;//Milliseconds to avoid triggering events during the camera's brightness adjustment
 
+  var topBottomBreak = (SAMPLE_SIZE * SAMPLE_SIZE) * 4 /2;
 
   var histogramContext = document.getElementById('histogramCanvas').getContext("2d");
 
@@ -174,6 +187,8 @@
     var ttt = 0;
     var histoLevel;
     var maxHisto = 1;
+    var topLight = 0;
+    var bottomLight = 0;
 
     if (localMediaStream) {
       ctx.drawImage(video, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
@@ -192,14 +207,16 @@
           yMin = yMin < y ? yMin : y;
           yMax = yMax > y ? yMax : y;
           Y+= y;
+
+          if(i<topBottomBreak){
+            topLight +=y;
+          }else{
+            bottomLight+=y;
+          }
+
       }
       
-      skipframes--;
-      if(printdelay>0 && skipframes <0 ) {
-        console.log(ttt, histogram)
-        printdelay--;
-      }
-
+      indicatorsTopBottom.className = topLight > bottomLight ? "on" : "off";
 
       var bortThreshold = 0.3 * (yMax - yMin) + yMin;
 
