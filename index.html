@@ -33,7 +33,7 @@
   #processingCanvas {
     -webkit-transform: scale(10,10);
     position: relative;
-    top: 200px;
+    top: 240px;
     left: 200px;
   }
   </style>
@@ -93,7 +93,7 @@
 <video id='videoEl' width="320" height="240" autoplay ></video>
 <canvas id="processingCanvas" width="40" height="40"></canvas>
 
-<canvas id="histogramCanvas" width="100" height="100" style="boder: solid 1px red;" ></canvas>
+<canvas id="histogramCanvas" width="100" height="100" style="border: solid 1px red;" ></canvas>
 
 <script>
 
@@ -155,13 +155,25 @@
   var lastEventFiredTime = 0;
   var slopeDebounce = 800;//Milliseconds to avoid triggering events during the camera's brightness adjustment
 
+
+  var histogramContext = document.getElementById('histogramCanvas').getContext("2d");
+
+  var skipframes = 50;
+  var printdelay  = 1;
+
+  var histogramLevels = 50, hlevl = 255 / histogramLevels;
+
   function snapshot() {
     var pixels;
-    var i,j;
+    var i,j,k;
     var level = 0, Y = 0;
     var frameMax, frameMin;
     var y, yMin=1000, yMax=0;
     var countWhite = 0 , countBlack=0;
+    var histogram  = [], histoGramIx;
+    var ttt = 0;
+    var histoLevel;
+    var maxHisto = 1;
 
     if (localMediaStream) {
       ctx.drawImage(video, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
@@ -171,10 +183,23 @@
       for(i=0;i< (SAMPLE_SIZE * SAMPLE_SIZE) * 4;i+=4){
           level += pixels[i+0] + pixels[i+1] + pixels[i+2];
           y = pixels[i+3] = 0.2126 * pixels[i+0] + 0.7152 * pixels[i+1] + 0.0722 * pixels[i+2];
+
+          histoGramIx = ~~ (y/hlevl); 
+          histoLevel = histogram[histoGramIx] ? histogram[histoGramIx] +=1 : 1;
+          histogram[histoGramIx] = histoLevel;
+          if(histoLevel > maxHisto) maxHisto = histoLevel;
+
           yMin = yMin < y ? yMin : y;
           yMax = yMax > y ? yMax : y;
           Y+= y;
       }
+      
+      skipframes--;
+      if(printdelay>0 && skipframes <0 ) {
+        console.log(ttt, histogram)
+        printdelay--;
+      }
+
 
       var bortThreshold = 0.3 * (yMax - yMin) + yMin;
 
@@ -190,7 +215,7 @@
 
       level = level/256/3/SAMPLE_SIZE/SAMPLE_SIZE;
 
-      currentvalue.innerHTML = Math.round(level*1000)/1000;
+      currentvalue.innerHTML = Math.round(level*1000)/1000 + " | " + Y;
 
       indicators.className = level>threshold ? "on" : "off";
 
@@ -221,7 +246,39 @@
       lastValue = thisValue;
       
     }
+
+    //Histogram ===============================
+    var hx, histoWidth = 100;
+    var hy, histoHeight = 100;
+
+    var imageData = histogramContext.getImageData(0, 0, 100, 100),
+      data = imageData.data,
+      len = data.length; // == histoWidth * histoHeight * 4
+
+    //Normalize histogramData to histoGraphics Height
+    for(i = 0 ; i<histogramLevels ; i++){
+      histogram[i] = histoHeight - (~~((histogram[i]||0) * histoHeight /maxHisto));
+    }
+
+    //
+    for(hy = 0; hy < histoHeight ; hy++){
+      for(hx = 0; hx < histoWidth ; hx++){
+        i = hy * (histoWidth * 4) + hx * 4;
+
+        if(hx<histogramLevels){
+          data[i] = histogram[hx] > hy ? 0 : 255;
+        }
+
+        data[i + 3] = 255;   
+      }
+    }
+    
+    histogramContext.putImageData(imageData, 0, 0,0,0,100,100);
+
+    //Histogram ===============================
+
     requestAnimationFrame(snapshot);
+
   }
 
 
@@ -251,7 +308,6 @@
     };
     localMediaStream = stream;
   }, errorCallback);
-
 
 
 </script>
