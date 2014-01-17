@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+
+<div id="Contents">Loading...</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+<script>
+
+function getLocalizationFromGDocs(gdocsInfo){
+	var localization = {};
+	var keyRegex = /^gsx\$(..)\-/;
+
+	_.each(gdocsInfo.feed.entry, function(entry){
+
+		var name;
+
+		_.each(entry, function(value, key){
+			var itemKey;
+			if(key=="gsx$key"){
+				name = value;
+			}else{
+				itemKey = key.match(keyRegex);
+				if(itemKey){
+					
+				}
+
+			} 
+		})
+	});
+
+	return gdocsInfo;
+}
+
+function processLocalizations(gdocsInfo){
+	
+	console.log(getLocalizationFromGDocs(gdocsInfo));
+
+}
+
+</script>
+
+<script src="https://spreadsheets.google.com/feeds/list/0AqjuTkacEBXLdE14cHBQdExkdDRYN0QzQ1NyWS1MM2c/od6/public/values?alt=json-in-script&callback=processLocalizations" ></script>
+
+</body>
+</html>
