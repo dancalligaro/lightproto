@@ -1,0 +1,16 @@
+Desktop: Chrome + Firefox (native)
+IE -> using Flash plugin(without an appropriate version of flash, this will not work)
+
+User will always need to confirm that they want the app to grant access to the camera. If they deny access to the camera, it will not work.
+
+Luminance (relative): we are going to use the formula: Y = 0.2126 R + 0.7152 G + 0.0722 B. (R,G and B correspond to each color value of a pixel). This has into consideration that the human eye is more sensitive to green than to red or blue.
+
+Camera constraint. Most webcams will automatically adjust the brightness and constrast of the images acquired. This will cause that for example 2 very different natural light conditions to produce similar RGB.
+
+The light detection will be done using one of two mechanisms:
+ 
+ - Method 1: The general brightness of the image (average of luminance) is below a certain value. Have in mind that cameras adjust the image brightness and contrast, expanding the range. This means that in general, an image taken at direct sun light, will have more or less the same luminance than a well lit indoor scene. The camera will make the indoor image brighter, and the average luminance will be more or less the same for both images. If images are taken with the camera in a dark room, with lights off, and the general color of the image is black, then this method will detect this image as "light off".
+ 
+ - Method 2: A more sophisticated algorithm can be used. In this case, for each frame, the luminance value will be calculated for every pixel. The maxLuminance and minLuminance will be detected. Then the middle value between max and min luminance will be calculated for each frame. This value will be used to determine the number of pixels that have luminance value above and below it. If the number of values above that value is greater than the ones below, then the image is considered to be "light on". Else, the image will be "light off".
+
+

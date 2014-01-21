@@ -1,0 +1,38 @@
+package
+{
+  import flash.display.Sprite;
+  import flash.media.Camera;
+  import flash.media.Video;
+  import flash.display.BitmapData;
+  import flash.text.*;
+
+  [SWF(frameRate='15', width='640', height='480', backgroundColor='#FFFFFF')]
+  public class CameraRequest extends Sprite
+  {
+    protected var webcam:Camera;
+    protected var video:Video;
+
+    public function CameraRequest()
+    {
+      openCamera(0);
+    }
+
+    public function openCamera(camIndex:int):void
+    {
+      webcam=Camera.getCamera();
+      if (!webcam)
+      {
+        trace('No webcam available!');
+      }
+      webcam.setMode(640, 480, 30);
+      video=new Video(640, 480);
+      video.attachCamera(webcam);
+      addChild(video);
+    }
+
+    public function drawCapture(image:BitmapData):void
+    {
+      image.draw(video);
+    }
+  }
+}

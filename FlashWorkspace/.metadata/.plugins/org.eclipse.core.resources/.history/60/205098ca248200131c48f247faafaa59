@@ -1,0 +1,55 @@
+package
+{
+  import flash.external.ExternalInterface;
+  import flash.display.Sprite;
+  import flash.media.Camera;
+  import flash.media.Video;
+  import flash.display.BitmapData;
+   import flash.text.*;
+   import flash.events.StatusEvent;
+
+  [SWF(frameRate='5', width='100', height='100', backgroundColor='#FFFFFF')]
+  public class CameraRequest extends Sprite
+  {
+    protected var webcam:Camera;
+    protected var video:Video;
+
+    public function CameraRequest()
+    {
+      openCamera(0);
+    }
+
+    public function openCamera(camIndex:int):void
+    {
+      webcam=Camera.getCamera();
+      if (!webcam)
+      {
+      	ExternalInterface.call('flashWebcam.noWebcamAvailable');
+      }else{
+	      webcam.addEventListener(StatusEvent.STATUS, statusHandler); 
+	      webcam.setMode(640, 480, 30);
+	      video=new Video(640, 480);
+	      video.attachCamera(webcam);
+	      addChild(video);
+	      ExternalInterface.call('console.log', 'camera loaded');
+      }
+    }
+
+	public function statusHandler(event:StatusEvent):void 
+	{ 
+	    // This event gets dispatched when the user clicks the "Allow" or "Deny" 
+	    // button in the Flash Player Settings dialog box. 
+	    trace(event.code); // "Camera.Muted" or "Camera.Unmuted"
+	    
+	    ExternalInterface.call('flashWebcam.statusChanged', event.code);
+	     
+	}
+
+    /*public function drawCapture(image:BitmapData):void
+    {
+      image.draw(video);
+    }
+    */
+  }
+}
+

@@ -1,0 +1,33 @@
+
+<script language="JavaScript"> 
+    // adds two numbers, and sends the result back to ActionScript 
+    function addNumbers(num1, num2) 
+    { 
+        return (num1 + num2); 
+    } 
+
+    
+window.flashWebcam = {
+	statusChanged: function(statusCode){
+		if(statusCode=="Camera.Unmuted"){
+			alert('Ok!')
+		}else{
+			alert('This will not work')
+		}
+	}, 
+	noWebcamAvailable: function(){
+		alert('No webcam available')
+	}, 
+	lightLevel: function(level){
+		console.log(level)
+	}
+}
+    
+</script>
+
+<div id="flashWebcamPlayer">
+	<object id="flashWebcamElement" data="CameraRequest.swf"
+	type="application/x-shockwave-flash" width="320" height="240" >
+	<param name="movie" value="CameraRequest.swf" />
+	</object>
+</div>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+	<title>FlashDetector</title>
+</head>
+<body>
+	<div id="camera"></div>
+
+<script src="jquery-1.10.2.js"></script>
+<script src="jquery.webcam.js" ></script>
+<script>
+
+var NumCal = 0;
+var rows = [];
+
+$("#camera").webcam({
+	width: 640,
+	height: 480,
+	mode: "callback",
+	swffile: "/jscam_canvas_only.swf",
+	onTick: function() {
+		console.log('ontick', arguments);
+	},
+	onSave: function(data) {
+		//var dots = data.split(";"); 
+		//rows.push(dots);
+	},
+	onCapture: function() {
+		rows = [];
+		webcam.save();
+		console.log(rows.length);
+		setTimeout(function(){
+			webcam.capture();
+		},1);
+	},
+	debug: function() {
+		console.log('ondebug', arguments);
+	},
+	onLoad: function() {
+		console.log('onload', arguments);
+		
+		var cams = webcam.getCameraList();
+    	for(var i in cams) {
+        	console.log('camera', cams[i])
+    	}
+
+	}
+});
+
+
+</script>
+</body>
+</html>
