@@ -1,16 +1,16 @@
-
-<script language="JavaScript"> 
-    // adds two numbers, and sends the result back to ActionScript 
-    function addNumbers(num1, num2) 
-    { 
-        return (num1 + num2); 
-    } 
-
+<!doctype html>
+<html>
+<head>
+	<title>SWTF</title>
+	<link rel="stylesheet" href="a.css"></link>
+</head>
+<body>
+<script> 
     
 window.flashWebcam = {
 	statusChanged: function(statusCode){
 		if(statusCode=="Camera.Unmuted"){
-			alert('Ok!')
+			document.getElementById('flashWebcamPlayer').className = "hideCamera"
 		}else{
 			alert('This will not work')
 		}
@@ -31,3 +31,96 @@ window.flashWebcam = {
 	<param name="movie" value="CameraRequest.swf" />
 	</object>
 </div>
+
+ <!-- Start of Brightcove Player -->
+
+<div style="display:none">
+
+</div>
+
+<div id="bcVideoPlayer1" class="bcVideoPlayer">
+
+	<script src="//admin.brightcove.com/js/APIModules_all.js"></script>
+
+	<!--
+	By use of this code snippet, I agree to the Brightcove Publisher T and C 
+	found at https://accounts.brightcove.com/en/terms-and-conditions/. 
+	-->
+	<script language="JavaScript" type="text/javascript" src="http://admin.brightcove.com/js/BrightcoveExperiences.js"></script>
+
+	
+	<!-- Start of Brightcove Player -->
+
+	<object id="myExperience3081892988001" class="BrightcoveExperience">
+	  <param name="bgcolor" value="#FFFFFF" />
+	  <param name="width" value="480" />
+	  <param name="height" value="270" />
+	  <param name="playerID" value="3082830219001" />
+	  <param name="playerKey" value="AQ~~,AAACzeHMdIE~,1gGyrLPjhLgpfIAO4muVAsEgz_S2MRGE" />
+	  <param name="isVid" value="true" />
+	  <param name="isUI" value="true" />
+	  <param name="dynamicStreaming" value="true" />
+	  
+	  <param name="@videoPlayer" value="3081892988001" />
+	</object>
+
+	<!-- 
+	This script tag will cause the Brightcove Players defined above it to be created as soon
+	as the line is read by the browser. If you wish to have the player instantiated only after
+	the rest of the HTML is processed and the page load is complete, remove the line.
+	-->
+	<!-- End of Brightcove Player -->
+
+</div>
+
+<div id="bcVideoPlayer2" class="bcVideoPlayer">
+
+	<!-- Start of Brightcove Player -->
+
+	<div style="display:none">
+
+	</div>
+
+	<!--
+	By use of this code snippet, I agree to the Brightcove Publisher T and C 
+	found at https://accounts.brightcove.com/en/terms-and-conditions/. 
+	-->
+
+	<object id="myExperience3081892987001" class="BrightcoveExperience">
+	  <param name="bgcolor" value="#FFFFFF" />
+	  <param name="width" value="480" />
+	  <param name="height" value="270" />
+	  <param name="playerID" value="3082830219001" />
+	  <param name="playerKey" value="AQ~~,AAACzeHMdIE~,1gGyrLPjhLgpfIAO4muVAsEgz_S2MRGE" />
+	  <param name="isVid" value="true" />
+	  <param name="isUI" value="true" />
+	  <param name="dynamicStreaming" value="true" />
+	  
+	  <param name="@videoPlayer" value="3081892987001" />
+	</object>
+
+	<!-- 
+	This script tag will cause the Brightcove Players defined above it to be created as soon
+	as the line is read by the browser. If you wish to have the player instantiated only after
+	the rest of the HTML is processed and the page load is complete, remove the line.
+	-->
+	<script type="text/javascript">brightcove.createExperiences();</script>
+
+	<!-- End of Brightcove Player -->
+
+</div>
+
+<script language="JavaScript" type="text/javascript"> 
+	// See more at: http://jeremyshapiro.com/blog/2013/09/disabling-controls-on-a-brightcove-video/#sthash.Szves0zb.dpuf
+	function onTemplateLoaded(expID){ 
+		var _player, _exMod, _modVP; // get reference to the player itself 
+		_player = brightcove.getExperience(expID); // get reference to experience module 
+		_exMod = _player.getModule(APIModules.EXPERIENCE); _modVP = _player.getModule(APIModules.VIDEO_PLAYER); // hide media controls 
+		_exMod.getElementByID("videoPlayer").getControls().setIncludeInLayout(false); // in case users want to replay video listen for click event 
+		_exMod.getElementByID("videoPlayer").addEventListener("click", function(){ 
+			_modVP.play(); }); 
+		} 
+</script> 
+
+</body>
+</html>

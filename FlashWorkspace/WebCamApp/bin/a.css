@@ -1,0 +1,17 @@
+.hideCamera{
+	position: absolute;
+	top: -1000px;
+}
+
+.bcVideoPlayer {
+	position: relative;
+	padding-bottom: 56.25%;
+}
+
+.BrightcoveExperience {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}

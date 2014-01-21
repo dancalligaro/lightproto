@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+	<title>VideoJS</title>
+	<link href="video-js.css" rel="stylesheet">
+	<style>
+		.videoContainer{
+			margin: 10px;
+			border: solid 1px #aaa;
+			min-height: 100px;
+		}
+		.hideCamera{
+			position: absolute;
+			top: -1000px;
+		}
+	</style>
+</head>
+<body>
+	<script src="video.js"></script>
+	<script src="../jquery-1.10.2.js"></script>
+	<script src="../underscore.js"></script>
+
+<div id="flashWebcamPlayer">
+	<object id="flashWebcamElement" data="CameraRequest.swf"
+	type="application/x-shockwave-flash" width="320" height="240" >
+	<param name="movie" value="CameraRequest.swf" />
+	</object>
+</div>
+
+
+<div id="videoCont" class="videoContainer">
+
+</div>
+
+<script type="text/template" id="videoTemplate">
+	<video id="<%- instanceID %>" class="video-js vjs-default-skin"
+	 preload="auto" width="640" height="358" poster="<%- posterImage %>"
+	 data-setup="{}">
+	 <source src="<%- videoFileName %>" type='video/mp4'>
+	 
+	</video>
+</script>
+
+<script>
+
+	window.flashWebcam = {
+		currentStatus: "on",
+		statusChanged: function(statusCode){
+			if(statusCode=="Camera.Unmuted"){
+				document.getElementById('flashWebcamPlayer').className = "hideCamera"
+				window.runVideo()
+			}else{
+				alert('Camera Access Rejected')
+			}
+		}, 
+		noWebcamAvailable: function(){
+			alert('No webcam available')
+		}, 
+		lightLevel: function(level){
+			if(level > 70){
+				if(window.flashWebcam.currentStatus == "off"){
+					if(window.flashWebcam.turnOn) {
+						window.flashWebcam.currentStatus = "on";
+						window.flashWebcam.turnOn();
+					}
+				}
+			}else{
+				if(window.flashWebcam.currentStatus == "on"){
+					if(window.flashWebcam.turnOff) {
+						window.flashWebcam.currentStatus = "off";
+						window.flashWebcam.turnOff();
+					}
+				}
+			}
+		}
+	};
+
+
+$(function(){
+	
+	var lastInstance, lastInstanceID;
+
+	var videos = [
+		["cover1.png", "http://s3.amazonaws.com/lightproto/VID_20140121_152726_1.mp4"], 
+		["cover2.png", "http://s3.amazonaws.com/lightproto/VID_20140121_153336_1.mp4"]
+	];
+	
+	var videoTemplate = _.template($('#videoTemplate').html());
+
+	var currentVideo = 0;
+	var aspectRatio = 358/640; 
+
+	function killInstance(instance){
+		//Kill previous instance
+		instance.pause();
+		setTimeout(function(){
+			instance.dispose();
+			$('#videoCont').html('');			
+		},100);
+	}
+
+	window.runVideo = function(){
+		createVideoInstance(videos[0]);
+	}
+
+	function createVideoInstance(videoInfo){
+
+		if(lastInstance){
+			killInstance(lastInstance);	
+			lastInstance = null;
+		}
+
+		setTimeout(function(){
+			var instanceID = lastInstanceID = "vjsPlayer" + (+new Date());
+
+			$('#videoCont').html(videoTemplate({
+				instanceID: instanceID, 
+				videoFileName: videoInfo[1], 
+				posterImage: videoInfo[0]
+			}));
+
+			videojs(instanceID, {}, function(){
+				var self = lastInstance = this;
+
+				this.on("ended", function(){
+					setTimeout(function(){
+						killInstance(self);	
+						lastInstance = null;
+					},100);
+				});
+
+				resizeVideo();
+
+				this.play();
+
+			});		
+		},200);
+	}
+
+	function resizeVideo(){
+		if(!lastInstance) return;
+		var width = document.getElementById(lastInstanceID).parentElement.offsetWidth;
+		lastInstance.width(width).height( width * aspectRatio );
+	}
+
+	function getNextVideo(){
+		return videos[ (currentVideo++) % videos.length ];
+	}
+	
+	$(window).on('resize', _.debounce(resizeVideo,100));
+
+	window.flashWebcam.turnOn = function(){
+		createVideoInstance(videos[0]);
+	};
+
+	window.flashWebcam.turnOff = function(){
+		createVideoInstance(videos[1]);	
+	};
+
+});
+
+</script>
+
+</body>
+</html>
