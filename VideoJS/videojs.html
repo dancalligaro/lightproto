@@ -20,6 +20,7 @@
 	<script src="../jquery-1.10.2.js"></script>
 	<script src="../underscore.js"></script>
 
+<div id="bwValue">Calculating BW...</div>
 <div id="flashWebcamPlayer">
 	<object id="flashWebcamElement" data="CameraRequest.swf"
 	type="application/x-shockwave-flash" width="320" height="240" >
@@ -30,6 +31,11 @@
 
 <div id="videoCont" class="videoContainer">
 
+</div>
+
+<div id="bwTest" style="display:none">
+	<img id="px1" src="" />
+	<img id="px2" src="" />
 </div>
 
 <script type="text/template" id="videoTemplate">
@@ -157,6 +163,20 @@ $(function(){
 		createVideoInstance(videos[1]);	
 	};
 
+});
+
+$(function(){
+	//Get user's bandwidth
+	var startTime = +new Date();
+	var pingTime, loadTime;
+	$('#px1').load(function(){
+		pingTime = +new Date();
+		$('#px2').load(function(){
+			loadTime = +new Date();
+			$('#bwValue').html( 'ping:' + (pingTime - startTime) + " transfer: " + ((loadTime - pingTime) - (pingTime - startTime)) );
+		}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/pic1.jpg')
+	}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/px3.gif');
+	//$('img').load(function() { ... }).attr('src', 'new_image_source'); 
 });
 
 </script>
