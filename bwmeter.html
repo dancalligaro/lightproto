@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+	<title>BWMeter</title>
+	<style>
+	</style>
+</head>
+<body>
+	<script src="jquery-1.10.2.js"></script>
+	<script src="underscore.js"></script>
+
+<div id="bwValue">Calculating BW...</div>
+
+<div id="bwTest" style="display:none">
+	<img id="px0" src="" />
+	<img id="px1" src="" />
+	<img id="px2" src="" />
+</div>
+
+<script>
+
+$(function(){
+	//Get user's bandwidth
+	var startTime, pingTime, loadTime;
+	
+	$("#px0").load(function(){
+		startTime = +new Date();
+		$('#px1').load(function(){
+			pingTime = +new Date();
+			$('#px2').load(function(){
+				loadTime = +new Date();
+				var transferTime = ((loadTime - pingTime) - (pingTime - startTime));
+				$('#bwValue').html( 'ping:' + (pingTime - startTime) + "ms transfer: " + transferTime + "ms " + Math.round(8 * 667168 / transferTime) + "bps") ;
+			}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/pic1.jpg')
+		}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/px3.gif');
+	}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/px4.gif');
+
+});
+
+</script>
+
+</body>
+</html>

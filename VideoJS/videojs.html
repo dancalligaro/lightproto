@@ -173,7 +173,8 @@ $(function(){
 		pingTime = +new Date();
 		$('#px2').load(function(){
 			loadTime = +new Date();
-			$('#bwValue').html( 'ping:' + (pingTime - startTime) + " transfer: " + ((loadTime - pingTime) - (pingTime - startTime)) );
+			var transferTime = ((loadTime - pingTime) - (pingTime - startTime));
+			$('#bwValue').html( 'ping:' + (pingTime - startTime) + "ms transfer: " + transferTime + "ms " + Math.round(8 * 667168 / transferTime) + "bps") ;
 		}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/pic1.jpg')
 	}).attr('src', 'http://dvwpvl2pxg55z.cloudfront.net/px3.gif');
 	//$('img').load(function() { ... }).attr('src', 'new_image_source'); 
