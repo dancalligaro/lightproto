@@ -67,6 +67,7 @@ $(function(){
 		p = ctx.getImageData(0, 0, SAMPLE_W, SAMPLE_H).data;
 		var start;
 		var firstI;
+		var detectedPixels = 0;
 
 		if(pixels){
 
@@ -98,6 +99,7 @@ $(function(){
 							//green = p[i+1] > pixels[i+1] ? p[i+1]-pixels[i+1] : pixels[i+1]-p[i+1];
 							d[i]=d[i+1]=d[i+2]= 255;
 							d[i+3]=255;	
+							detectedPixels++;
 						}
 
 						x = SAMPLE_W; //To go to next iteration
@@ -118,7 +120,8 @@ $(function(){
 
 		pixels = p;
 
-		if(firstI){
+		if(detectedPixels > 200 && firstI){
+			console.log(detectedPixels)
 			window.drawIt(firstI);
 		}
 	}
