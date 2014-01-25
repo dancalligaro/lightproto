@@ -5,17 +5,26 @@ $(function(){
 	canvas[0].width = canvas.parent().width();
 	var ctx = canvas.get(0).getContext('2d');
 
-	window.drawIt = function(){
+	window.drawIt = function(firstI){
 		ctx.clearRect(0,0,canvas[0].width,canvas[0].height);
+
 		var ix = 0;
-		for(var i = 1; i<80 ; i++){
-			for(var j = 1; j<60; j++){
+		for(var i = 0; i<60 ; i++){
+			for(var j = 0; j<80; j++){
 				ix++;
 				//draw a circle
+
 				ctx.beginPath();
-				ctx.arc(i * 10 , j*10, 3, 0, Math.PI*2, true);
+				if(firstI.x == j && firstI.y==i){
+					ctx.fillStyle = "red";
+					ctx.arc((80-j) * 10 , i*10 + 10, 15, 0, Math.PI*2, true);
+				}else{
+					ctx.fillStyle = "black";
+					ctx.arc((80-j) * 10 , i*10 + 10, 3, 0, Math.PI*2, true);
+				}
 				ctx.closePath();
 				ctx.fill();			
+				//if(ix==firstI)ctx.strokeStyle = "black";
 			}
 		}
 	}
@@ -57,6 +66,7 @@ $(function(){
 		ctx.drawImage(video, 0, 0, SAMPLE_W, SAMPLE_H);
 		p = ctx.getImageData(0, 0, SAMPLE_W, SAMPLE_H).data;
 		var start;
+		var firstI;
 
 		if(pixels){
 
@@ -70,6 +80,8 @@ $(function(){
 					green = p[i+1] > pixels[i+1] ? p[i+1]-pixels[i+1] : pixels[i+1]-p[i+1];
 					if(green>level){
 						
+						if(!firstI)firstI = {x:x,y:y};
+
 						start=x;
 						i = (y+1) * width;
 						x = SAMPLE_W;
@@ -98,16 +110,17 @@ $(function(){
 					//d[i+3]=255;
 				}
 			}
-			// for(i=0;i<len;){
-			// }
 			
 			ctx2.putImageData(destImg,0,0)
 
 		}
 
+
 		pixels = p;
 
-		window.drawIt();
+		if(firstI){
+			window.drawIt(firstI);
+		}
 	}
 
 	function videoError(){
