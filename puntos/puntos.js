@@ -3,20 +3,23 @@ $(function(){
 	var canvas = $('#puntos');
 	canvas[0].height = canvas.parent().height();
 	canvas[0].width = canvas.parent().width();
-
 	var ctx = canvas.get(0).getContext('2d');
 
-	var ix = 0;
-	for(var i = 1; i<50 ; i++){
-		for(var j = 1; j<20; j++){
-			ix++;
-			//draw a circle
-			ctx.beginPath();
-			ctx.arc(i * 10 , j*10, 3, 0, Math.PI*2, true);
-			ctx.closePath();
-			ctx.fill();			
+	window.drawIt = function(){
+		ctx.clearRect(0,0,canvas[0].width,canvas[0].height);
+		var ix = 0;
+		for(var i = 1; i<80 ; i++){
+			for(var j = 1; j<60; j++){
+				ix++;
+				//draw a circle
+				ctx.beginPath();
+				ctx.arc(i * 10 , j*10, 3, 0, Math.PI*2, true);
+				ctx.closePath();
+				ctx.fill();			
+			}
 		}
 	}
+
 
 });
 
@@ -37,8 +40,8 @@ $(function(){
 	var ctx = videoCanvas.getContext("2d");
 	var ctx2 = videoCanvas2.getContext("2d");
 
-	var SAMPLE_W = 160;
-	var SAMPLE_H = 120;
+	var SAMPLE_W = 80;
+	var SAMPLE_H = 60;
 	var count = 200;
 	var width = SAMPLE_W * 4;
 	var pixels;
@@ -103,6 +106,8 @@ $(function(){
 		}
 
 		pixels = p;
+
+		window.drawIt();
 	}
 
 	function videoError(){
