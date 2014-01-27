@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+	<title>HTML5</title>
+	<script src="../../../jquery-1.10.2.js"></script>
+	<script src="../../../underscore.js"></script>
+</head>
+
+<body>
+
+	<div id="loader">Loading...</div>
+
+	<div id='playButtons'>
+		<input type="button" data-vid="vid1" value="play"/>
+		<input type="button" data-vid="vid2" value="play"/>
+		<input type="button" data-vid="vid3" value="play"/>
+	</div>
+
+	<video id='vid1' width="960" height="540" preload="auto" style="display: none;">
+		<source src="http://dvwpvl2pxg55z.cloudfront.net/VID_720_1625_1.mp4" type="video/mp4">
+		<!-- <source src="movie.ogg" type="video/ogg"> -->
+	</video>
+
+ 	<video id='vid2' width="960" height="540" preload="auto" style="display: none;">
+		<source src="http://dvwpvl2pxg55z.cloudfront.net/test720_1625_1.mp4" type="video/mp4">
+		<!-- <source src="movie.ogg" type="video/ogg"> -->
+	</video>
+
+ 	<video id='vid3' width="960" height="540" preload="auto" style="display: none;">
+		<source src="http://dvwpvl2pxg55z.cloudfront.net/VID_fruta_1625_2.mp4" type="video/mp4">
+		<!-- <source src="movie.ogg" type="video/ogg"> -->
+	</video>
+
+
+<script>
+	var vid1 = $('#vid1')[0], vid2 = $('#vid2')[0];
+	var playing1 = false;
+	
+	var playButtons = $("#playButtons input");
+	playButtons.click(function(){
+		var self = this;
+		playButtons.each(function(){
+			var videoObj = $("#" + $(this).attr('data-vid'));
+			if(videoObj.attr('id') == $(self).attr('data-vid')){
+				videoObj.show();
+				videoObj[0].play();
+			}else{
+				videoObj.hide()
+				videoObj[0].pause();
+				videoObj[0].currentTime = 0;
+			}
+		});
+
+	});
+
+	function addSourceToVideo(element, src, type) {
+	    var source = document.createElement('source');
+	    source.src = src;
+	    source.type = type;
+	    element.appendChild(source);
+	}
+
+	function checkCanStart(){
+		var totalPercent = 0;
+		var canPlay = false;
+		var videos = $('video');
+		var loadedVideos = 0;
+
+		var completedString = ""; 
+
+		videos.each(function(){
+			var self = this;
+
+
+			//console.log(self.duration)
+			if(self.duration && self.buffered.length){
+				var loadedPercent = self.buffered.end(0) * 100/self.duration;
+				totalPercent += loadedPercent;
+				if(totalPercent > 98){
+					loadedVideos++;
+				}
+				completedString += $(self).attr('id') + ": " + loadedPercent.toFixed(0) + "%<br />"
+			}else{
+				completedString += $(self).attr('id') + ": no info <br />"
+			}
+
+		})
+
+		completedString += "Overall: " + (totalPercent/ videos.length).toFixed(0) + "%" ;
+		$('#loader').html( completedString);
+
+		if(loadedVideos == videos.length){
+			//console.log('can Play')
+		}
+	}
+	 
+	var video;
+	var index = 0;
+	$(document).ready(function(){
+
+		//video = document.getElementsByTagName('video')[0];
+		$('video').each(function(){
+			console.log('can we check here')
+			checkCanStart(); //When video is cached
+			$(this).on('progress', function(){
+				checkCanStart();
+			})
+		})
+	 
+	});
+	 
+setInterval(function(){
+	checkCanStart()
+},1000)
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+	<title>JWplayer</title>
+</head>
+<body>
+
+<div id="videoCont1" class="videoContainer"></div>
+<div id="videoCont2" class="videoContainer"></div>
+
+<script src="../../../jquery-1.10.2.js"></script>
+<script src="../../../underscore.js"></script>
+<script type="text/javascript" src="jwplayer/jwplayer.js"></script>
+
+<input type="button" id="play1" value="play1"/>
+<input type="button" id="play2" value="play2"/>
+
+<script>
+
+var videos = [
+	["cover1.png", "http://dvwpvl2pxg55z.cloudfront.net/VID_720_1625.mp4"], 
+	["cover2.png", "http://dvwpvl2pxg55z.cloudfront.net/test720_1625.mp4"]
+];
+
+jwplayer("videoCont1").setup({
+	controls: false,
+    file: videos[0][1],
+    image: videos[0][0]
+});
+
+jwplayer("videoCont2").setup({
+	controls: false,
+    file: videos[1][1],
+    image: videos[1][0]
+});
+
+var pl1 = jwplayer(0);
+var pl2 = jwplayer(1);
+
+setTimeout(function(){
+	console.log('starting')
+	//pl1.play(true);
+},500)
+
+var pop = true;
+
+pl1.onPlay(function(stateInfo){
+	if(pop && stateInfo.newstate ==  "PLAYING"){
+		setTimeout(function(){
+			pl1.pause(true); 
+		},100)
+		pop = false;
+	} 
+})
+
+pl1.onReady(function(){
+	$("#play1").click(function(){
+		pl1.play();
+	});	
+})
+
+setTimeout(function(){
+	pl1.play(true);
+},1000);
+
+pl1.onBufferChange(function(){
+	console.log('buffer change: ', pl1.getBuffer())
+})
+
+
+pl2.onReady(function(){
+	$("#play2").click(function(){
+		pl2.play();
+	});	
+})
+
+</script>
+
+</body>
+</html>
