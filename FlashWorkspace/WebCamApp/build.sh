@@ -1,0 +1,1 @@
+/Users/danielca/Downloads/flex_sdk_4.6/bin/mxmlc src/CameraRequest.as -output bin/CameraRequest.swf -static-link-runtime-shared-libraries=true

@@ -15,10 +15,19 @@ package
   {
     protected var webcam:Camera;
     protected var video:Video;
+    private var alreadyInit:Boolean = false;
 
     public function CameraRequest()
     {
-      openCamera(0);
+    	ExternalInterface.addCallback("startCamera", startCamera);
+    }
+
+    public function startCamera(): void
+    {
+    	if(!alreadyInit){
+    		alreadyInit = true;
+    		openCamera(0);
+    	}
     }
 
     public function openCamera(camIndex:int):void
