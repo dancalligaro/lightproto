@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+	<title>HTML5</title>
+	<script src="../../jquery-1.10.2.js"></script>
+	<script src="../../underscore.js"></script>
+	<style>
+		body,html {
+			font-family: arial;
+			padding: 0;
+			margin: 0;
+		}
+		#loader{
+			padding: 15px;
+			position: absolute;
+			top: 10px;
+			left: 150px;
+			color: white;
+			background: black;
+			opacity: 0.7;
+		}
+		#playButtons{
+			padding: 15px;
+			position: absolute;
+			top:10px;
+			left: 10px;	
+		}
+		video{
+			width: 100%;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="loader">Loading...</div>
+
+	<div id='playButtons'></div>
+
+	<script type="text/template" id="videoTemplate">
+		<video id='<%-videoId%>' preload="auto" style="display: none;">
+			<source src="<%-basePath%><%-video%>.mp4" type="video/mp4">
+			<source src="<%-basePath%><%-video%>.ogv" type="video/ogg">
+		</video>
+	</script>
+
+	<script type="text/template" id="buttonTemplate">
+		<div>
+			<input type="button" data-vid="<%-videoId%>" value="<%-label%>"/>
+		</div>
+	</script>
+
+	<div id="videosContainer">
+
+	</div>
+
+<script>
+
+var videos = [
+	"VID_20140129_115259_1",
+	"VID_20140129_120343_1",
+
+	"VID_20140129_115313_1",
+	"VID_20140129_120401_1",
+
+	"VID_20140129_115328_1",
+	"VID_20140129_120416_1",
+
+	"VID_20140129_115345_1",
+	"VID_20140129_120431_1",
+
+	"VID_20140129_115400_1",
+	"VID_20140129_120446_1",
+
+	"VID_20140129_115426_1",
+	"VID_20140129_120505_1",
+
+	"VID_20140129_115441_1",
+	"VID_20140129_120520_1",
+
+	"VID_20140129_115457_1",
+	"VID_20140129_120535_1",
+
+	"VID_20140129_115512_1",
+	"VID_20140129_120549_1",
+
+	"VID_20140129_115526_1",
+	"VID_20140129_120604_1"
+];
+
+var basePath = "http://dvwpvl2pxg55z.cloudfront.net/a/";
+var videoTemplate = _.template($("#videoTemplate").html());
+var buttonTemplate = _.template($("#buttonTemplate").html());
+var playButtonsContainer = $('#playButtons');
+var maxVideosBuffering = 2;
+
+_.each(videos, function(videoId,ix){
+	playButtonsContainer.append(buttonTemplate( {videoId: "video_" + ix, label:"Play"} ))
+});
+
+function checkVideoStatus(){
+	var videoEls = $('#videosContainer video');
+	var cantBuffering=0;
+	
+	var info = "";
+
+	for(var i =0;i<videos.length;i++){
+		info += i + ": ";
+		var videoEl = $('#video_' + i);
+		if(videoEl.length){
+			var vel = videoEl.get(0);
+			if(vel.duration && vel.buffered.length && vel.buffered.end(0) > 8){
+				//Enough buffer
+			}else{
+				cantBuffering++;
+			}
+
+			if(vel.duration && vel.buffered.length){
+				info += " buf:" + vel.buffered.end(0).toFixed(0) + "s "
+			}
+
+		}else{
+			info +=" less than 8"
+		}
+
+		info +="<br />";
+
+	}
+
+	if(videoEls.length < videos.length){
+
+		videoEls.each(function(){
+			if(this.duration && this.buffered.length && this.buffered.end(0) > 8){
+				//Enough buffer
+			}else{
+				cantBuffering++;
+			}
+		});
+
+		if(cantBuffering < maxVideosBuffering){
+			loadMoreVideos(maxVideosBuffering -  cantBuffering );
+		}		
+	}
+
+	$("#loader").html(info)
+
+}
+
+var addedVideos = 0;
+
+function loadMoreVideos(howMany){
+	console.log('lad mor veids')
+	if(addedVideos < videos.length){
+		for(var i=0;i<howMany;i++){
+			$('#videosContainer').append(videoTemplate({ 
+				videoId: "video_" + addedVideos, 
+				video: videos[addedVideos], 
+				basePath: basePath
+			}));
+			addedVideos++;
+		}
+	}
+}
+
+setInterval(function(){
+	checkVideoStatus()
+},500)
+
+$('#playButtons').on('click', 'input', function(){
+	var self = this;
+	$('video').each(function(){
+		var videoObj = $(this);
+		if(videoObj.attr('id') == $(self).attr('data-vid')){
+			videoObj.show();
+			videoObj[0].play();
+		}else{
+			videoObj.hide()
+			videoObj[0].pause();
+			videoObj[0].currentTime = 0;
+		}
+	});
+
+})
+
+</script>
+
+</body>
+</html>
