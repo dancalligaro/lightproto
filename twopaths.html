@@ -203,7 +203,7 @@ function checkInitialStart(){
 	var ready = 0;
 	_.each(streams, function(stream){
 		var videoEl = $('#video'+stream+"0");
-		if(videoEl.length && videoEl.get(0) && videoEl.get(0).buffered && videoEl.get(0).buffered.length &&videoEl.get(0).buffered.end(0) > bufferTime){
+		if(videoEl.length && videoEl.get(0) && videoEl.get(0).buffered && videoEl.get(0).buffered.length &&videoEl.get(0).buffered.end(0) > 4){
 			ready++;
 		};
 	});
