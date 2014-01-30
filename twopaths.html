@@ -60,7 +60,7 @@
 	</div>
 
 
-	<div id="loader">Loading...</div>
+	<div id="loader">Buffering... please wait.</div>
 
 	<div>
 		<input type="button" id="startCam" value="Start Camera" />
@@ -207,7 +207,6 @@ function checkInitialStart(){
 			ready++;
 		};
 	});
-	console.log('ready ' + ready)
 	if(ready==2){
 		videosReady = true;
 		$(window).trigger('readytostart');
