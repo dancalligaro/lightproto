@@ -1,0 +1,316 @@
+<!doctype html>
+<html>
+<head>
+	<title>HTML5</title>
+	<script src="jquery-1.10.2.js"></script>
+	<script src="underscore.js"></script>
+	<style>
+		body,html {
+			font-family: arial;
+			padding: 0;
+			margin: 0;
+		}
+		.hideCamera{
+			position: absolute;
+			top: -1000px;
+		}
+		#loader{
+			padding: 15px;
+			position: absolute;
+			top: 10px;
+			left: 150px;
+			color: white;
+			background: black;
+			opacity: 0.7;
+		}
+		video{
+			width: 100%;
+		}
+		#levelCont{
+			display: none;
+			width: 200px;
+			height: 30px;
+			border: solid 2px #aaa;
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			opacity: 0.6;
+		}
+		#levelIndicator{
+			position: absolute;
+			top:0 ;
+			left: 0;
+			width: 50%;
+			background: green;
+			height: 30px;
+		}
+		#text{
+			position: absolute;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="flashWebcamPlayer">
+		<object id="flashWebcamElement" data="FlashWorkspace/WebCamApp/bin/CameraRequest.swf"
+		type="application/x-shockwave-flash" width="320" height="240" >
+		<param name="movie" value="FlashWorkspace/WebCamApp/bin/CameraRequest.swf" />
+		</object>
+	</div>
+
+
+	<div id="loader">Loading...</div>
+
+	<div>
+		<input type="button" id="startCam" value="Start Camera" />
+		<div id="levelCont">
+			<div id="levelIndicator"></div>
+			<div id="text">light level <span></span></div>
+		</div>
+	</div>
+
+
+
+	<script type="text/template" id="videoTemplate">
+		<video id='<%-videoId%>' preload="auto" style="display: none;">
+			<source src="<%-basePath%><%-video%>.mp4" type="video/mp4">
+			<source src="<%-basePath%><%-video%>.ogv" type="video/ogg">
+		</video>
+	</script>
+
+	<script type="text/template" id="buttonTemplate">
+		<div>
+			<input type="button" data-vid="<%-videoId%>" value="<%-label%>"/>
+		</div>
+	</script>
+
+	<div id="videosContainer"></div>
+
+<script>
+
+var videos ={ 
+	a: [
+		"VID_20140129_115259_1",
+		"VID_20140129_115313_1",
+		"VID_20140129_115328_1",
+		"VID_20140129_115345_1",
+		"VID_20140129_115400_1",
+		"VID_20140129_115426_1",
+		"VID_20140129_115441_1",
+		"VID_20140129_115457_1",
+		"VID_20140129_115512_1",
+		"VID_20140129_115526_1"
+	],
+	b: [
+		"VID_20140129_120343_1",
+		"VID_20140129_120401_1",
+		"VID_20140129_120416_1",
+		"VID_20140129_120431_1",
+		"VID_20140129_120446_1",
+		"VID_20140129_120505_1",
+		"VID_20140129_120520_1",
+		"VID_20140129_120535_1",
+		"VID_20140129_120549_1",
+		"VID_20140129_120604_1"
+	]
+};
+
+var basePath = "http://dvwpvl2pxg55z.cloudfront.net/a/";
+var videoTemplate = _.template($("#videoTemplate").html());
+var streams  = ['a', 'b']
+var currentStream = 'a';
+var currentStreamVideo = { a: 0, b: 0};
+var currentStreamVideoTime = { a: 0, b:0};
+var videosContainerEl = $('#videosContainer');
+var preloadVideos = 2;
+var bufferTime = 8;
+var playStatus = "pause";
+
+function play(){
+	var videoEl = $('#video'+currentStream+ (currentStreamVideo[currentStream]));
+	videoEl.get(0).currentTime = currentStreamVideoTime[currentStream];
+	videoEl.show();
+	videoEl.get(0).play();
+	playStatus = "play";
+}
+
+function pause(){
+	var videoEl = $('#video'+currentStream+ (currentStreamVideo[currentStream]));
+	videoEl.get(0).pause();
+	currentStreamVideoTime[currentStream] = videoEl.get(0).currentTime;
+	videoEl.hide();
+	playStatus = "pause";	
+}
+
+function switchStream(stream){
+	if(typeof stream == "undefined" || stream!=currentStream){
+		pause();
+		currentStream = currentStream == 'a' ? 'b' : 'a';
+		checkToStart();		
+	}
+}
+
+function checkVideoStatus(){
+	var videoEls = $('#videosContainer video');
+
+
+	//Check preload status
+	_.each(streams, function(stream){
+		var offset = 0
+		do{
+			var videoEl = $('#video'+stream+ (currentStreamVideo[stream]+offset));
+			if(videoEl.length==0){
+				videosContainerEl.append(videoTemplate({
+					videoId: 'video'+stream+(currentStreamVideo[stream]+offset), 
+					video: videos[stream][currentStreamVideo[stream]+offset], 
+					basePath: basePath
+				}));
+			}else{
+				var vel = videoEl.get(0);
+			}
+
+		}while( (offset++) < preloadVideos && videos[stream].length > currentStreamVideo[stream]+offset && vel && vel.duration && vel.buffered.length && vel.buffered.end(0) > bufferTime );
+
+	});
+
+}
+
+function checkVideoEnded(){
+	var videoEl = $('#video'+currentStream+ (currentStreamVideo[currentStream]));
+	if(videoEl.get(0).ended){
+		videoEl.hide();
+		currentStreamVideo[currentStream]++;
+		currentStreamVideoTime[currentStream] = 0;
+	}
+	checkToStart();
+}
+
+function checkToStart(){
+	var videoEl = $('#video'+currentStream+ (currentStreamVideo[currentStream]));
+	if(videoEl.length && videoEl.get(0).buffered.length &&videoEl.get(0).buffered.end(0) > bufferTime){
+		videoEl.show();
+		videoEl.get(0).play();
+	}else{
+		setTimeout(checkToStart,100)
+	}
+}
+
+var videosReady = false;
+var cameraReady = false;
+
+function checkInitialStart(){
+	var ready = 0;
+	_.each(streams, function(stream){
+		var videoEl = $('#video'+stream+"0");
+		if(videoEl.length && videoEl.get(0) && videoEl.get(0).buffered && videoEl.get(0).buffered.length &&videoEl.get(0).buffered.end(0) > bufferTime){
+			ready++;
+		};
+	});
+	console.log('ready ' + ready)
+	if(ready==2){
+		videosReady = true;
+		$(window).trigger('readytostart');
+	}else{
+		setTimeout(checkInitialStart,100)
+	}	
+}
+
+function checkCameraAndVideosReady(){
+	if(videosReady&&cameraReady){
+		start();
+	}else{
+		setTimeout(checkCameraAndVideosReady,50);
+	}
+}
+
+function start(){
+	setTimeout(checkInitialStart,100)
+	setInterval(checkVideoEnded,100);
+}
+
+// =======================================================================================
+
+	window.flashWebcam = {
+		currentStatus: "on",
+		statusChanged: function(statusCode){
+			if(statusCode=="Camera.Unmuted"){
+				$("#startCam").hide();
+				$("#levelCont").show();
+				document.getElementById('flashWebcamPlayer').className = "hideCamera"
+				cameraReady = true;
+
+			}else{
+				alert('Camera Access Rejected')
+			}
+		}, 
+		noWebcamAvailable: function(){
+			alert('No webcam available')
+		}, 
+		lightLevel: function(level){
+
+			var levelper = (level*100/255);
+
+			$('#text span').html(levelper.toFixed(0))
+			$('#levelIndicator').css({'width': levelper +'%'})
+
+			if(levelper > 25){
+				$('#levelIndicator').css({'background': 'green'})
+				if(window.flashWebcam.currentStatus == "off"){
+					if(window.flashWebcam.turnOn) {
+						window.flashWebcam.currentStatus = "on";
+						window.flashWebcam.turnOn();
+					}
+				}
+			}else{
+				$('#levelIndicator').css({'background': 'red'})
+				if(window.flashWebcam.currentStatus == "on"){
+					if(window.flashWebcam.turnOff) {
+						window.flashWebcam.currentStatus = "off";
+						window.flashWebcam.turnOff();
+					}
+				}
+			}
+		}
+	};
+
+$('#startCam').click(function(){
+	$("#flashWebcamElement").get(0).startCamera();
+	
+	window.flashWebcam.turnOn = function(){
+		if(videosReady&&cameraReady) switchStream('a');
+	};
+	
+	window.flashWebcam.turnOff = function(){
+		if(videosReady&&cameraReady) switchStream('b');
+	};
+})
+
+
+// =======================================================================================
+
+
+
+function init(){
+
+	setInterval(function(){
+		checkVideoStatus()
+	},100)	
+
+	checkInitialStart();
+
+	checkCameraAndVideosReady();
+
+	$(window).on('readytostart', function(){
+		$("#loader").hide();
+	});
+
+}
+
+$(init)
+
+
+</script>
+
+</body>
+</html>
