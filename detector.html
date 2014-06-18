@@ -82,7 +82,7 @@
   <hr />
 
   <div id="darkPixels">
-    <div>Dark Pixels</div>
+    <div>Dark Pixels <span id="darkPxLevel"></span></div>
     <div id="indicatorsPixels">
       <div class="indicator indicatorOn">ON</div>
       <div class="indicator indicatorOff">OFF</div>
@@ -176,6 +176,8 @@
 
   var histogramLevels = 50, hlevl = 255 / histogramLevels;
 
+  var darkPxLevelEl = document.getElementById('darkPxLevel');
+
   function snapshot() {
     var pixels;
     var i,j,k;
@@ -219,7 +221,7 @@
       indicatorsTopBottom.className = topLight > bottomLight ? "on" : "off";
 
       var bortThreshold = 0.3 * (yMax - yMin) + yMin;
-
+      darkPxLevelEl.innerHTML = "Lvl: " + Math.round(bortThreshold) + " max: " + Math.round(yMax) + " min: " + Math.round(yMin);
       for(i=0;i< (SAMPLE_SIZE * SAMPLE_SIZE) *4 ;i+=4){
         if(pixels[i+3] > bortThreshold){
           countWhite ++;
